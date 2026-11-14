@@ -6,6 +6,7 @@ import { formatRupiah, formatDateTime, formatDate } from '../../../lib/utils'
 import { Alert } from '../../../components/common/Alert'
 import { Link } from 'react-router-dom'
 import { Check, Copy, ExternalLink, Edit3, Trash2 } from 'lucide-react'
+import { EditReportModal } from '../../reports/components/EditReportModal'
 
 export function AdminDashboardPage() {
   const [stats, setStats] = useState({
@@ -21,6 +22,7 @@ export function AdminDashboardPage() {
   const [scammers, setScammers] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedReviewReport, setSelectedReviewReport] = useState(null)
+  const [editingReport, setEditingReport] = useState(null)
   const [copiedSql, setCopiedSql] = useState(false)
   const [feedback, setFeedback] = useState(null)
 
@@ -194,18 +196,24 @@ CREATE TABLE IF NOT EXISTS public.report_evidences (
       {/* Tab 1: Moderasi Laporan */}
       {activeTab === 'reports' && (
         <div className="space-y-3">
-          <div className="flex items-center gap-1.5 text-xs">
-            {['ALL', 'pending', 'approved', 'rejected'].map((f) => (
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+            {[
+              { id: 'ALL', label: 'Semua' },
+              { id: 'pending', label: 'Menunggu Verifikasi' },
+              { id: 'pending_deletion', label: 'Pengajuan Hapus' },
+              { id: 'approved', label: 'Disetujui' },
+              { id: 'rejected', label: 'Ditolak' },
+            ].map((f) => (
               <button
-                key={f}
-                onClick={() => setReportsFilter(f)}
-                className={`px-2.5 py-1 rounded-lg font-medium transition ${
-                  reportsFilter === f
+                key={f.id}
+                onClick={() => setReportsFilter(f.id)}
+                className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
+                  reportsFilter === f.id
                     ? 'bg-slate-900 text-white'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                {f === 'ALL' ? 'Semua' : f}
+                {f.label}
               </button>
             ))}
           </div>
@@ -249,12 +257,21 @@ CREATE TABLE IF NOT EXISTS public.report_evidences (
                         <StatusBadge status={report.status} />
                       </td>
                       <td className="p-3 text-right">
-                        <button
-                          onClick={() => setSelectedReviewReport(report)}
-                          className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs"
-                        >
-                          Tinjau
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => setSelectedReviewReport(report)}
+                            className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs cursor-pointer"
+                          >
+                            Tinjau
+                          </button>
+                          <button
+                            onClick={() => setEditingReport(report)}
+                            className="p-1 text-slate-400 hover:text-indigo-600 rounded hover:bg-slate-100 transition cursor-pointer"
+                            title="Edit data laporan (perlu ditinjau ulang setelah diedit)"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -355,6 +372,21 @@ CREATE TABLE IF NOT EXISTS public.report_evidences (
           onClose={() => setSelectedReviewReport(null)}
           onUpdateStatus={handleUpdateStatus}
           onDeleteReport={handleDeleteReport}
+          onEditReport={(rep) => setEditingReport(rep)}
+        />
+      )}
+
+      {/* Edit Report Modal */}
+      {editingReport && (
+        <EditReportModal
+          report={editingReport}
+          isOpen={Boolean(editingReport)}
+          isAdmin={true}
+          onClose={() => setEditingReport(null)}
+          onSuccess={(msg) => {
+            setFeedback({ type: 'success', text: msg })
+            loadData()
+          }}
         />
       )}
     </div>

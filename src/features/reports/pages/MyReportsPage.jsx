@@ -2,17 +2,19 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../../context/AuthContext'
 import { safeMerchApi } from '../../../lib/supabase'
-import { StatusBadge, PlatformBadge } from '../../../components/common/Badge'
+import { StatusBadge } from '../../../components/common/Badge'
 import { formatRupiah, formatDateTime } from '../../../lib/utils'
 import { Modal } from '../../../components/common/Modal'
 import { Alert } from '../../../components/common/Alert'
-import { Plus, Eye, Trash2, Clock, CheckCircle, ExternalLink } from 'lucide-react'
+import { EditReportModal } from '../components/EditReportModal'
+import { Plus, Eye, Trash2, Edit3, RotateCcw, ExternalLink } from 'lucide-react'
 
 export function MyReportsPage() {
   const { user } = useAuth()
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedReport, setSelectedReport] = useState(null)
+  const [editingReport, setEditingReport] = useState(null)
   const [feedback, setFeedback] = useState(null)
 
   useEffect(() => {
@@ -33,14 +35,54 @@ export function MyReportsPage() {
     }
   }
 
-  async function handleWithdraw(reportId) {
-    if (!window.confirm('Batalkan laporan ini?')) return
-    try {
-      await safeMerchApi.deleteReport(reportId)
-      setReports((prev) => prev.filter((r) => r.id !== reportId))
-      setFeedback({ type: 'success', text: 'Laporan berhasil dibatalkan.' })
-    } catch (err) {
-      setFeedback({ type: 'danger', text: 'Gagal membatalkan laporan.' })
+  async function handleDeleteOrRequestWithdraw(report) {
+    if (report.status === 'approved') {
+      const confirmed = window.confirm(
+        'Laporan ini sudah berstatus Terverifikasi (Approved) dan dipublikasikan.\n\nSesuai aturan keamanan, penghapusan laporan yang telah dipublikasikan harus ditinjau ulang oleh tim moderator.\n\nApakah Anda ingin mengajukan penghapusan laporan ini?'
+      )
+      if (!confirmed) return
+
+      try {
+        await safeMerchApi.requestReportDeletion(report.id)
+        setFeedback({
+          type: 'success',
+          text: 'Pengajuan penghapusan berhasil dikirim. Status laporan kini "Pengajuan Hapus" dan akan ditinjau ulang oleh moderator.',
+        })
+        await loadMyReports()
+        if (selectedReport?.id === report.id) setSelectedReport(null)
+      } catch (err) {
+        setFeedback({ type: 'danger', text: 'Gagal mengajukan penghapusan: ' + err.message })
+      }
+    } else if (report.status === 'pending_deletion') {
+      const confirmed = window.confirm(
+        'Batalkan pengajuan penghapusan ini?\n\nStatus laporan akan dikembalikan ke Terverifikasi (Approved).'
+      )
+      if (!confirmed) return
+
+      try {
+        await safeMerchApi.cancelReportDeletion(report.id)
+        setFeedback({
+          type: 'success',
+          text: 'Pengajuan penghapusan dibatalkan. Laporan kembali aktif berstatus Terverifikasi.',
+        })
+        await loadMyReports()
+        if (selectedReport?.id === report.id) setSelectedReport(null)
+      } catch (err) {
+        setFeedback({ type: 'danger', text: 'Gagal membatalkan pengajuan: ' + err.message })
+      }
+    } else {
+      // pending or rejected
+      const confirmed = window.confirm('Hapus laporan ini secara permanen?')
+      if (!confirmed) return
+
+      try {
+        await safeMerchApi.deleteReport(report.id)
+        setReports((prev) => prev.filter((r) => r.id !== report.id))
+        setFeedback({ type: 'success', text: 'Laporan berhasil dihapus.' })
+        if (selectedReport?.id === report.id) setSelectedReport(null)
+      } catch (err) {
+        setFeedback({ type: 'danger', text: 'Gagal menghapus laporan.' })
+      }
     }
   }
 
@@ -50,7 +92,7 @@ export function MyReportsPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Laporan Saya</h1>
           <p className="text-slate-500 text-sm mt-0.5">
-            Daftar laporan penipuan yang telah Anda kirimkan.
+            Daftar laporan penipuan yang telah Anda kirimkan. Anda dapat mengedit atau menghapus laporan kapan saja.
           </p>
         </div>
         <Link
@@ -82,19 +124,44 @@ export function MyReportsPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {/* Button Detail */}
                   <button
                     onClick={() => setSelectedReport(report)}
-                    className="p-1 text-slate-500 hover:text-slate-800 text-xs font-semibold flex items-center gap-1"
+                    className="p-1 text-slate-500 hover:text-slate-800 text-xs font-semibold flex items-center gap-1 cursor-pointer"
                   >
                     <Eye className="w-3.5 h-3.5" /> Detail
                   </button>
-                  {report.status === 'pending' && (
+
+                  {/* Button Edit (Bisa untuk pending, approved, maupun rejected) */}
+                  <button
+                    onClick={() => setEditingReport(report)}
+                    className="p-1 text-indigo-600 hover:text-indigo-800 text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                    title="Edit laporan (perlu ditinjau ulang setelah diedit)"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" /> Edit
+                  </button>
+
+                  {/* Button Hapus / Ajukan Hapus */}
+                  {report.status === 'pending_deletion' ? (
                     <button
-                      onClick={() => handleWithdraw(report.id)}
-                      className="p-1 text-rose-500 hover:text-rose-700 text-xs font-semibold flex items-center gap-1"
-                      title="Batalkan laporan"
+                      onClick={() => handleDeleteOrRequestWithdraw(report)}
+                      className="p-1 text-amber-600 hover:text-amber-800 text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                      title="Batalkan pengajuan hapus"
                     >
-                      <Trash2 className="w-3.5 h-3.5" /> Batal
+                      <RotateCcw className="w-3.5 h-3.5" /> Batal Hapus
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleDeleteOrRequestWithdraw(report)}
+                      className="p-1 text-rose-500 hover:text-rose-700 text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                      title={
+                        report.status === 'approved'
+                          ? 'Ajukan penghapusan laporan (perlu ditinjau ulang oleh moderator)'
+                          : 'Hapus laporan'
+                      }
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      {report.status === 'approved' ? 'Ajukan Hapus' : 'Hapus'}
                     </button>
                   )}
                 </div>
@@ -192,9 +259,53 @@ export function MyReportsPage() {
                 </div>
               </div>
             )}
+
+            {/* Action buttons inside detail modal */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => {
+                  const rep = selectedReport
+                  setSelectedReport(null)
+                  setEditingReport(rep)
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold text-xs transition cursor-pointer"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Edit Laporan Ini</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleDeleteOrRequestWithdraw(selectedReport)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-semibold text-xs transition cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>
+                  {selectedReport.status === 'approved'
+                    ? 'Ajukan Hapus Laporan'
+                    : selectedReport.status === 'pending_deletion'
+                    ? 'Batalkan Pengajuan Hapus'
+                    : 'Hapus Laporan'}
+                </span>
+              </button>
+            </div>
           </div>
         )}
       </Modal>
+
+      {/* Edit Modal */}
+      {editingReport && (
+        <EditReportModal
+          report={editingReport}
+          isOpen={Boolean(editingReport)}
+          onClose={() => setEditingReport(null)}
+          onSuccess={(msg) => {
+            setFeedback({ type: 'success', text: msg })
+            loadMyReports()
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -484,6 +484,133 @@ export const safeMerchApi = {
   },
 
   /**
+   * Update report data (chronology, loss_amount, post_url, scammerData, evidenceData)
+   * Alur: Setelah diedit, status laporan kembali ke 'pending' untuk ditinjau ulang!
+   */
+  async updateReport(reportId, { scammerData, reportData, evidenceData, resetStatusToPending = true, newStatus = null }) {
+    const statusToSet = newStatus || (resetStatusToPending ? 'pending' : undefined)
+
+    if (isSupabaseConfigured) {
+      try {
+        const updatePayload = {
+          chronology: reportData.chronology.trim(),
+          loss_amount: Number(reportData.loss_amount),
+        }
+        if (reportData.post_url !== undefined) {
+          updatePayload.post_url = reportData.post_url?.trim() || null
+        }
+        if (statusToSet) {
+          updatePayload.status = statusToSet
+        }
+
+        const { error: repErr } = await supabase
+          .from('reports')
+          .update(updatePayload)
+          .eq('id', reportId)
+        if (repErr) throw repErr
+
+        // Update scammer if provided
+        if (scammerData) {
+          const { data: rep } = await supabase
+            .from('reports')
+            .select('scammer_id')
+            .eq('id', reportId)
+            .single()
+          if (rep?.scammer_id) {
+            await supabase
+              .from('scammers')
+              .update({
+                target_name: scammerData.target_name.trim(),
+                bank_name: scammerData.bank_name.trim(),
+                account_number: scammerData.account_number.trim(),
+                social_handle: scammerData.social_handle?.trim() || null,
+                platform: scammerData.platform,
+              })
+              .eq('id', rep.scammer_id)
+          }
+        }
+
+        // Update evidences if provided
+        if (evidenceData && Array.isArray(evidenceData)) {
+          await supabase.from('report_evidences').delete().eq('report_id', reportId)
+          if (evidenceData.length > 0) {
+            const evPayload = evidenceData.map((ev) => ({
+              report_id: reportId,
+              image_url: ev.image_url,
+              caption: ev.caption || 'Bukti pendukung',
+            }))
+            await supabase.from('report_evidences').insert(evPayload)
+          }
+        }
+
+        return { success: true }
+      } catch (err) {
+        console.warn('Supabase updateReport error:', err)
+        throw err
+      }
+    }
+
+    // Local / Offline fallback
+    const reports = getStoredReports()
+    const repIdx = reports.findIndex((r) => r.id === reportId)
+    if (repIdx === -1) throw new Error('Laporan tidak ditemukan')
+
+    reports[repIdx].chronology = reportData.chronology.trim()
+    reports[repIdx].loss_amount = Number(reportData.loss_amount)
+    if (reportData.post_url !== undefined) {
+      reports[repIdx].post_url = reportData.post_url?.trim() || null
+    }
+    if (statusToSet) {
+      reports[repIdx].status = statusToSet
+    }
+    saveStoredReports(reports)
+
+    if (scammerData) {
+      const scammers = getStoredScammers()
+      const scIdx = scammers.findIndex((s) => s.id === reports[repIdx].scammer_id)
+      if (scIdx !== -1) {
+        scammers[scIdx].target_name = scammerData.target_name.trim()
+        scammers[scIdx].bank_name = scammerData.bank_name.trim()
+        scammers[scIdx].account_number = scammerData.account_number.trim()
+        scammers[scIdx].social_handle = scammerData.social_handle?.trim() || null
+        scammers[scIdx].platform = scammerData.platform
+        saveStoredScammers(scammers)
+      }
+    }
+
+    if (evidenceData && Array.isArray(evidenceData)) {
+      let evidences = getStoredEvidences()
+      evidences = evidences.filter((e) => e.report_id !== reportId)
+      evidenceData.forEach((ev, idx) => {
+        evidences.push({
+          id: `ev-${Date.now()}-${idx}`,
+          report_id: reportId,
+          image_url: ev.image_url,
+          caption: ev.caption || 'Bukti pendukung',
+          created_at: new Date().toISOString(),
+        })
+      })
+      saveStoredEvidences(evidences)
+    }
+
+    return { success: true }
+  },
+
+  /**
+   * Pengirim mengajukan penghapusan laporan (status: pending_deletion) untuk ditinjau ulang
+   */
+  async requestReportDeletion(reportId, reason = '') {
+    return this.updateReportStatus(reportId, 'pending_deletion')
+  },
+
+  /**
+   * Pengirim membatalkan pengajuan penghapusan (mengembalikan status ke approved)
+   */
+  async cancelReportDeletion(reportId) {
+    return this.updateReportStatus(reportId, 'approved')
+  },
+
+  /**
    * Admin: Delete Report
    */
   async deleteReport(reportId) {
@@ -525,7 +652,7 @@ export const safeMerchApi = {
         const { count: pendingReportsCount } = await supabase
           .from('reports')
           .select('*', { count: 'exact', head: true })
-          .eq('status', 'pending')
+          .in('status', ['pending', 'pending_deletion'])
 
         const { data: approvedReports } = await supabase
           .from('reports')
@@ -553,7 +680,7 @@ export const safeMerchApi = {
     const reports = getStoredReports()
 
     const approvedReports = reports.filter((r) => r.status === 'approved')
-    const pendingReports = reports.filter((r) => r.status === 'pending')
+    const pendingReports = reports.filter((r) => r.status === 'pending' || r.status === 'pending_deletion')
     const totalLoss = approvedReports.reduce((sum, r) => sum + Number(r.loss_amount || 0), 0)
 
     return {

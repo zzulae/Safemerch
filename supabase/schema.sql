@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS public.reports (
     chronology TEXT NOT NULL,
     loss_amount NUMERIC NOT NULL CHECK (loss_amount >= 0),
     post_url TEXT,
-    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'pending_deletion')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

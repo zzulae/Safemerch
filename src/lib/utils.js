@@ -151,6 +151,12 @@ export function getReportStatusBadge(status) {
         dot: 'bg-rose-500',
         text: 'Ditolak (Rejected)',
       }
+    case 'pending_deletion':
+      return {
+        bg: 'bg-rose-50 text-rose-700 border-rose-300',
+        dot: 'bg-rose-500',
+        text: 'Pengajuan Hapus (Perlu Ditinjau)',
+      }
     case 'pending':
     default:
       return {

@@ -38,6 +38,7 @@ export function StatusBadge({ status }) {
       {status === 'approved' && <CheckCircle className="w-3 h-3 text-emerald-600" />}
       {status === 'pending' && <Clock className="w-3 h-3 text-amber-600" />}
       {status === 'rejected' && <XCircle className="w-3 h-3 text-rose-600" />}
+      {status === 'pending_deletion' && <AlertTriangle className="w-3 h-3 text-rose-600" />}
       {badge.text}
     </span>
   )

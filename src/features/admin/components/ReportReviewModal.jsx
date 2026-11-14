@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Modal } from '../../../components/common/Modal'
 import { StatusBadge, RiskBadge, PlatformBadge } from '../../../components/common/Badge'
 import { formatRupiah, formatDateTime } from '../../../lib/utils'
-import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Trash2, ExternalLink } from 'lucide-react'
+import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Trash2, ExternalLink, Edit3 } from 'lucide-react'
 
 export function ReportReviewModal({
   report,
@@ -10,6 +10,7 @@ export function ReportReviewModal({
   onClose,
   onUpdateStatus,
   onDeleteReport,
+  onEditReport,
 }) {
   const [targetStatus, setTargetStatus] = useState(report?.status || 'approved')
   const [targetRiskLevel, setTargetRiskLevel] = useState(report?.scammer?.risk_level || 'HIGH')
@@ -50,6 +51,19 @@ export function ReportReviewModal({
       maxWidth="max-w-3xl"
     >
       <div className="space-y-6 text-sm">
+        {/* Banner if pending deletion */}
+        {report.status === 'pending_deletion' && (
+          <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 space-y-1.5">
+            <div className="flex items-center gap-2 font-bold text-rose-700 text-xs">
+              <AlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+              <span>Pengajuan Penghapusan Laporan oleh Pengirim</span>
+            </div>
+            <p className="text-xs text-rose-800 leading-relaxed">
+              Pengirim telah mengajukan permintaan agar laporan ini dihapus. Silakan tinjau kronologi dan bukti sebelum memutuskan. Anda dapat menyetujui (Hapus Permanen) atau menolak pengajuan (kembalikan status ke Approved).
+            </p>
+          </div>
+        )}
+
         {/* Scammer & Reporter Info Card */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
           <div>
@@ -152,6 +166,7 @@ export function ReportReviewModal({
                 <option value="approved">Approved (Setujui & Publikasikan)</option>
                 <option value="rejected">Rejected (Tolak Laporan / Bukti Kurang)</option>
                 <option value="pending">Pending (Kembalikan ke Antrean)</option>
+                <option value="pending_deletion">Pengajuan Hapus (Pending Deletion)</option>
               </select>
             </div>
 
@@ -174,22 +189,39 @@ export function ReportReviewModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={processing}
-            className="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-bold transition"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            Hapus Laporan
-          </button>
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={processing}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-bold transition cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              {report.status === 'pending_deletion' ? 'Setujui Hapus (Hapus Permanen)' : 'Hapus Laporan'}
+            </button>
+
+            {onEditReport && (
+              <button
+                type="button"
+                onClick={() => {
+                  const rep = report
+                  onClose()
+                  onEditReport(rep)
+                }}
+                className="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-bold transition cursor-pointer"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                Edit Laporan
+              </button>
+            )}
+          </div>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition"
+              className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition cursor-pointer"
             >
               Tutup
             </button>
@@ -197,7 +229,7 @@ export function ReportReviewModal({
               type="button"
               onClick={handleSave}
               disabled={processing}
-              className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-md transition disabled:opacity-50"
+              className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-md transition disabled:opacity-50 cursor-pointer"
             >
               {processing ? 'Menyimpan...' : 'Terapkan Keputusan'}
             </button>
