@@ -4,7 +4,7 @@ import { safeMerchApi } from '../../../lib/supabase'
 import { RiskBadge, PlatformBadge } from '../../../components/common/Badge'
 import { formatRupiah, formatDate, formatDateTime } from '../../../lib/utils'
 import { Modal } from '../../../components/common/Modal'
-import { Copy, Check, ArrowLeft, Plus } from 'lucide-react'
+import { Copy, Check, ArrowLeft, Plus, ExternalLink } from 'lucide-react'
 
 export function ScammerDetailPage() {
   const { id } = useParams()
@@ -152,6 +152,20 @@ export function ScammerDetailPage() {
                 <p className="text-slate-700 leading-relaxed whitespace-pre-line">
                   {report.chronology}
                 </p>
+
+                {report.post_url && (
+                  <div className="pt-0.5">
+                    <a
+                      href={report.post_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
+                      <span>Lihat Postingan Asli Korban</span>
+                    </a>
+                  </div>
+                )}
 
                 {report.report_evidences && report.report_evidences.length > 0 && (
                   <div className="pt-1">

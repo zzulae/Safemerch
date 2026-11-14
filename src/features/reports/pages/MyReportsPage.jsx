@@ -6,7 +6,7 @@ import { StatusBadge, PlatformBadge } from '../../../components/common/Badge'
 import { formatRupiah, formatDateTime } from '../../../lib/utils'
 import { Modal } from '../../../components/common/Modal'
 import { Alert } from '../../../components/common/Alert'
-import { Plus, Eye, Trash2, Clock, CheckCircle } from 'lucide-react'
+import { Plus, Eye, Trash2, Clock, CheckCircle, ExternalLink } from 'lucide-react'
 
 export function MyReportsPage() {
   const { user } = useAuth()
@@ -161,6 +161,21 @@ export function MyReportsPage() {
                 {selectedReport.chronology}
               </p>
             </div>
+
+            {selectedReport.post_url && (
+              <div>
+                <span className="text-slate-400 block mb-1">Link Postingan Korban:</span>
+                <a
+                  href={selectedReport.post_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-rose-600 hover:text-rose-700 hover:underline font-medium break-all bg-rose-50/50 p-2.5 rounded-lg border border-rose-100"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{selectedReport.post_url}</span>
+                </a>
+              </div>
+            )}
 
             {selectedReport.report_evidences && selectedReport.report_evidences.length > 0 && (
               <div>

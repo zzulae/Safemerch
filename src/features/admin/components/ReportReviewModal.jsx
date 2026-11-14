@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Modal } from '../../../components/common/Modal'
 import { StatusBadge, RiskBadge, PlatformBadge } from '../../../components/common/Badge'
 import { formatRupiah, formatDateTime } from '../../../lib/utils'
-import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Trash2 } from 'lucide-react'
+import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Trash2, ExternalLink } from 'lucide-react'
 
 export function ReportReviewModal({
   report,
@@ -87,6 +87,22 @@ export function ReportReviewModal({
             {report.chronology}
           </p>
         </div>
+
+        {/* Post Link */}
+        {report.post_url && (
+          <div>
+            <h4 className="text-xs font-bold text-slate-500 uppercase mb-1">Link Postingan Korban</h4>
+            <a
+              href={report.post_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-rose-600 hover:text-rose-700 hover:underline font-medium break-all p-3 bg-slate-50 rounded-xl border border-slate-100 w-full"
+            >
+              <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>{report.post_url}</span>
+            </a>
+          </div>
+        )}
 
         {/* Evidences */}
         {report.report_evidences && report.report_evidences.length > 0 && (

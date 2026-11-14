@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS public.reports (
     scammer_id UUID NOT NULL REFERENCES public.scammers(id) ON DELETE CASCADE,
     chronology TEXT NOT NULL,
     loss_amount NUMERIC NOT NULL CHECK (loss_amount >= 0),
+    post_url TEXT,
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

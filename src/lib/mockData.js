@@ -98,6 +98,7 @@ export const INITIAL_REPORTS = [
     chronology:
       'Pelaku menawarkan WTS Photocard SEVENTEEN Mingyu Special Yearbook via Twitter @kpopmerch_jkt. Setelah transfer uang muka sebesar Rp 850.000 ke rekening BCA atas nama Rizky Maulana, akun Twitter langsung memblokir akun saya dan menghapus postingan jualannya.',
     loss_amount: 850000,
+    post_url: 'https://twitter.com/korban_scam/status/1713890123456789',
     status: 'approved',
     created_at: '2026-10-16T10:30:00Z',
   },

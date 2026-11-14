@@ -229,15 +229,20 @@ export const safeMerchApi = {
         }
 
         // 2. Insert report
+        const reportInsertPayload = {
+          reporter_id: reporterId,
+          scammer_id: scammerId,
+          chronology: reportData.chronology.trim(),
+          loss_amount: Number(reportData.loss_amount),
+          status: 'pending',
+        }
+        if (reportData.post_url?.trim()) {
+          reportInsertPayload.post_url = reportData.post_url.trim()
+        }
+
         const { data: newReport, error: repError } = await supabase
           .from('reports')
-          .insert({
-            reporter_id: reporterId,
-            scammer_id: scammerId,
-            chronology: reportData.chronology.trim(),
-            loss_amount: Number(reportData.loss_amount),
-            status: 'pending',
-          })
+          .insert(reportInsertPayload)
           .select()
           .single()
 
@@ -294,6 +299,7 @@ export const safeMerchApi = {
       scammer_id: scammer.id,
       chronology: reportData.chronology.trim(),
       loss_amount: Number(reportData.loss_amount),
+      post_url: reportData.post_url?.trim() || null,
       status: 'pending',
       created_at: new Date().toISOString(),
     }

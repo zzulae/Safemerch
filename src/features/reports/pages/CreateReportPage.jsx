@@ -7,7 +7,7 @@ import { safeMerchApi } from '../../../lib/supabase'
 import { useAuth } from '../../../context/AuthContext'
 import { formatRupiah } from '../../../lib/utils'
 import { Alert } from '../../../components/common/Alert'
-import { LogIn, UploadCloud, Trash2, Plus } from 'lucide-react'
+import { LogIn, UploadCloud, Trash2, Plus, Link2 } from 'lucide-react'
 
 function processImageFile(file) {
   return new Promise((resolve, reject) => {
@@ -98,6 +98,7 @@ export function CreateReportPage() {
       platform: searchParams.get('platform') || 'Twitter',
       loss_amount: searchParams.get('loss_amount') || '',
       chronology: '',
+      post_url: searchParams.get('post_url') || '',
       evidences: [],
     },
   })
@@ -212,6 +213,7 @@ export function CreateReportPage() {
       const reportData = {
         chronology: data.chronology,
         loss_amount: data.loss_amount,
+        post_url: data.post_url,
       }
 
       const evidenceData = data.evidences.map((ev, index) => ({
@@ -392,7 +394,29 @@ export function CreateReportPage() {
           )}
         </div>
 
-        {/* Row 6: Evidence Photos Direct Upload */}
+        {/* Row 6: Link to Victim's Post */}
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">
+            Link Postingan Korban Penipuan (Opsional)
+          </label>
+          <div className="relative flex items-center">
+            <Link2 className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
+            <input
+              type="url"
+              {...register('post_url')}
+              placeholder="Contoh: https://x.com/username/status/... atau https://instagram.com/p/..."
+              className="w-full pl-9 pr-3 py-2 text-xs font-mono border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+            />
+          </div>
+          <p className="text-[11px] text-slate-400 mt-1">
+            Tautan ke postingan atau utas media sosial dari korban penipuan (Twitter/X, Instagram, TikTok, dll).
+          </p>
+          {errors.post_url && (
+            <p className="text-xs text-rose-500 mt-1">{errors.post_url.message}</p>
+          )}
+        </div>
+
+        {/* Row 7: Evidence Photos Direct Upload */}
         <div className="space-y-3">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">

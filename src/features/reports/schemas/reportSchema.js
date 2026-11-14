@@ -34,6 +34,13 @@ export const reportSchema = z.object({
     .min(25, 'Kronologi penipuan harus dijelaskan minimal 25 karakter agar dapat diverifikasi tim moderator')
     .max(3000, 'Kronologi maksimal 3000 karakter'),
 
+  // Link directly to victim's post/thread (optional)
+  post_url: z
+    .string()
+    .url('Format URL tautan postingan tidak valid (harus diawali http:// atau https://)')
+    .optional()
+    .or(z.literal('')),
+
   // Evidence Photos (Direct photo upload, no URL required)
   evidences: z
     .array(
