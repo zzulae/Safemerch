@@ -34,25 +34,18 @@ export const reportSchema = z.object({
     .min(25, 'Kronologi penipuan harus dijelaskan minimal 25 karakter agar dapat diverifikasi tim moderator')
     .max(3000, 'Kronologi maksimal 3000 karakter'),
 
-  // Evidence Screenshots
-  primary_evidence_url: z
-    .string()
-    .min(1, 'Wajib melampirkan minimal 1 tautan / bukti foto transfer atau chat')
-    .url('Format tautan bukti gambar tidak valid (harus URL valid http/https)'),
-  primary_evidence_caption: z
-    .string()
-    .max(200, 'Keterangan bukti maksimal 200 karakter')
-    .optional(),
-  
-  secondary_evidence_url: z
-    .string()
-    .url('Format URL bukti kedua tidak valid')
-    .optional()
-    .or(z.literal('')),
-  secondary_evidence_caption: z
-    .string()
-    .max(200, 'Keterangan bukti maksimal 200 karakter')
-    .optional(),
+  // Evidence Photos (Direct photo upload, no URL required)
+  evidences: z
+    .array(
+      z.object({
+        id: z.string().optional(),
+        image_url: z.string().min(1, 'Foto bukti tidak boleh kosong'),
+        caption: z.string().max(200, 'Keterangan bukti maksimal 200 karakter').optional(),
+        file_name: z.string().optional(),
+        file_size: z.number().optional(),
+      })
+    )
+    .min(1, 'Wajib melampirkan minimal 1 bukti foto transfer atau percakapan'),
 })
 
 export const INDONESIAN_BANKS = [
