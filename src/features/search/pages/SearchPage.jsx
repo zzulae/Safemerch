@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { safeMerchApi } from '../../../lib/supabase'
 import { ScammerCard } from '../components/ScammerCard'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Search, RotateCcw, Plus, AlertCircle, ShieldCheck } from 'lucide-react'
+import { Search, RotateCcw, Plus, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react'
 
 export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -14,6 +14,8 @@ export function SearchPage() {
   const [bankName, setBankName] = useState('ALL')
   const [scammers, setScammers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 10
 
   useEffect(() => {
     loadScammers()
@@ -37,6 +39,7 @@ export function SearchPage() {
 
   function handleSearchSubmit(e) {
     e.preventDefault()
+    setCurrentPage(1)
     setSearchParams({ q: query, platform })
     loadScammers(query)
   }
@@ -45,8 +48,15 @@ export function SearchPage() {
     setQuery('')
     setPlatform('ALL')
     setBankName('ALL')
+    setCurrentPage(1)
     setSearchParams({})
     loadScammers('')
+  }
+
+  function handlePageChange(newPage) {
+    if (newPage < 1 || newPage > totalPages) return
+    setCurrentPage(newPage)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const platforms = [
@@ -56,6 +66,11 @@ export function SearchPage() {
     { id: 'Tokopedia', label: 'Tokopedia' },
     { id: 'Instagram', label: 'Instagram' },
   ]
+
+  const totalPages = Math.ceil(scammers.length / ITEMS_PER_PAGE) || 1
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, scammers.length)
+  const paginatedScammers = scammers.slice(startIndex, endIndex)
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
@@ -78,6 +93,7 @@ export function SearchPage() {
             value={query}
             onChange={(e) => {
               setQuery(e.target.value)
+              setCurrentPage(1)
               loadScammers(e.target.value)
             }}
             placeholder="Cari nomor rekening, nama pemilik, atau username..."
@@ -85,7 +101,7 @@ export function SearchPage() {
           />
           <button
             type="submit"
-            className="absolute right-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition"
+            className="absolute right-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition cursor-pointer"
           >
             Cari
           </button>
@@ -98,8 +114,11 @@ export function SearchPage() {
           {platforms.map((p) => (
             <button
               key={p.id}
-              onClick={() => setPlatform(p.id)}
-              className={`px-3 py-1.5 rounded-lg font-medium transition ${
+              onClick={() => {
+                setPlatform(p.id)
+                setCurrentPage(1)
+              }}
+              className={`px-3 py-1.5 rounded-lg font-medium transition cursor-pointer ${
                 platform === p.id
                   ? 'bg-slate-900 text-white'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -113,7 +132,10 @@ export function SearchPage() {
         <div className="flex items-center gap-2">
           <select
             value={bankName}
-            onChange={(e) => setBankName(e.target.value)}
+            onChange={(e) => {
+              setBankName(e.target.value)
+              setCurrentPage(1)
+            }}
             className="p-1.5 rounded-lg border border-slate-200 bg-white text-xs text-slate-700"
           >
             <option value="ALL">Semua Bank / E-Wallet</option>
@@ -130,7 +152,7 @@ export function SearchPage() {
             <button
               type="button"
               onClick={handleReset}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 transition"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 transition cursor-pointer"
               title="Reset filter"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -142,7 +164,13 @@ export function SearchPage() {
       {/* Results Header */}
       <div className="flex items-center justify-between pt-2 border-t border-slate-200">
         <span className="text-xs font-semibold text-slate-500">
-          Ditemukan {scammers.length} rekening
+          {scammers.length > 0 ? (
+            <>
+              Menampilkan {startIndex + 1}–{endIndex} dari {scammers.length} rekening
+            </>
+          ) : (
+            'Ditemukan 0 rekening'
+          )}
         </span>
         <Link
           to="/reports/create"
@@ -158,11 +186,80 @@ export function SearchPage() {
           Mencari data...
         </div>
       ) : scammers.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {scammers.map((scammer) => (
-            <ScammerCard key={scammer.id} scammer={scammer} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {paginatedScammers.map((scammer) => (
+              <ScammerCard key={scammer.id} scammer={scammer} />
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200">
+              <p className="text-xs text-slate-500">
+                Halaman <span className="font-semibold text-slate-700">{currentPage}</span> dari{' '}
+                <span className="font-semibold text-slate-700">{totalPages}</span>
+              </p>
+
+              <div className="flex items-center gap-1.5">
+                {/* Tombol Sebelumnya */}
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Sebelumnya</span>
+                </button>
+
+                {/* Nomor Halaman */}
+                <div className="hidden sm:flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((p) => {
+                      if (totalPages <= 5) return true
+                      if (p === 1 || p === totalPages) return true
+                      return Math.abs(p - currentPage) <= 1
+                    })
+                    .map((p, idx, arr) => {
+                      const prev = arr[idx - 1]
+                      const showEllipsis = prev && p - prev > 1
+
+                      return (
+                        <React.Fragment key={p}>
+                          {showEllipsis && (
+                            <span className="px-1 text-slate-400 text-xs select-none">...</span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handlePageChange(p)}
+                            className={`min-w-8 h-8 px-2 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                              currentPage === p
+                                ? 'bg-slate-900 text-white shadow-sm'
+                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        </React.Fragment>
+                      )
+                    })}
+                </div>
+
+                {/* Tombol Selanjutnya */}
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                >
+                  <span>Selanjutnya</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       ) : (
         <div className="p-8 border border-slate-200 rounded-xl text-center space-y-3 bg-white">
           <ShieldCheck className="w-8 h-8 text-slate-400 mx-auto" />
