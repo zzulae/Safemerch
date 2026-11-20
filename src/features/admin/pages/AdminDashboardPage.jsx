@@ -5,7 +5,7 @@ import { ReportReviewModal } from '../components/ReportReviewModal'
 import { formatRupiah, formatDateTime, formatDate } from '../../../lib/utils'
 import { Alert } from '../../../components/common/Alert'
 import { Link } from 'react-router-dom'
-import { Check, Copy, ExternalLink, Edit3, Trash2 } from 'lucide-react'
+import { ExternalLink, Edit3, Trash2 } from 'lucide-react'
 import { EditReportModal } from '../../reports/components/EditReportModal'
 
 export function AdminDashboardPage() {
@@ -16,14 +16,13 @@ export function AdminDashboardPage() {
     pendingReports: 0,
     totalLoss: 0,
   })
-  const [activeTab, setActiveTab] = useState('reports') // 'reports' | 'scammers' | 'schema'
+  const [activeTab, setActiveTab] = useState('reports') // 'reports' | 'scammers'
   const [reportsFilter, setReportsFilter] = useState('ALL')
   const [reports, setReports] = useState([])
   const [scammers, setScammers] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedReviewReport, setSelectedReviewReport] = useState(null)
   const [editingReport, setEditingReport] = useState(null)
-  const [copiedSql, setCopiedSql] = useState(false)
   const [feedback, setFeedback] = useState(null)
 
   useEffect(() => {
@@ -83,48 +82,6 @@ export function AdminDashboardPage() {
       ? reports
       : reports.filter((r) => r.status === reportsFilter)
 
-  const copySqlSchema = () => {
-    const sql = `-- SafeMerch Core Database Schema (PostgreSQL)
-CREATE TABLE IF NOT EXISTS public.profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  full_name TEXT NOT NULL,
-  role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS public.scammers (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  target_name TEXT NOT NULL,
-  bank_name TEXT NOT NULL,
-  account_number TEXT UNIQUE NOT NULL,
-  social_handle TEXT,
-  platform TEXT NOT NULL CHECK (platform IN ('Twitter', 'Shopee', 'Tokopedia', 'Instagram')),
-  risk_level TEXT NOT NULL DEFAULT 'HIGH' CHECK (risk_level IN ('LOW', 'MEDIUM', 'HIGH', 'CLEARED')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS public.reports (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  reporter_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  scammer_id UUID NOT NULL REFERENCES public.scammers(id) ON DELETE CASCADE,
-  chronology TEXT NOT NULL,
-  loss_amount NUMERIC NOT NULL CHECK (loss_amount >= 0),
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS public.report_evidences (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  report_id UUID NOT NULL REFERENCES public.reports(id) ON DELETE CASCADE,
-  image_url TEXT NOT NULL,
-  caption TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);`
-    navigator.clipboard.writeText(sql)
-    setCopiedSql(true)
-    setTimeout(() => setCopiedSql(false), 2000)
-  }
-
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-6">
       {/* Header */}
@@ -179,17 +136,6 @@ CREATE TABLE IF NOT EXISTS public.report_evidences (
           }`}
         >
           Daftar Scammer ({scammers.length})
-        </button>
-
-        <button
-          onClick={() => setActiveTab('schema')}
-          className={`px-4 py-2.5 border-b-2 transition ${
-            activeTab === 'schema'
-              ? 'border-slate-900 text-slate-900'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          Skema SQL Supabase
         </button>
       </div>
 
@@ -333,34 +279,6 @@ CREATE TABLE IF NOT EXISTS public.report_evidences (
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {/* Tab 3: Skema SQL Supabase */}
-      {activeTab === 'schema' && (
-        <div className="p-6 bg-white rounded-xl border border-slate-200 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">
-                Skema SQL Supabase (4 Tabel Utama & RLS)
-              </h3>
-              <p className="text-xs text-slate-500">
-                Salin dan jalankan di SQL Editor Supabase untuk inisialisasi basis data.
-              </p>
-            </div>
-            <button
-              onClick={copySqlSchema}
-              className="px-3 py-1.5 rounded-lg bg-slate-900 text-white font-medium text-xs flex items-center gap-1.5"
-            >
-              {copiedSql ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copiedSql ? 'Tersalin' : 'Salin SQL'}</span>
-            </button>
-          </div>
-
-          <div className="p-3 bg-slate-50 rounded-lg text-xs font-mono text-slate-700 overflow-x-auto space-y-1">
-            <p>-- Tabel: profiles, scammers, reports, report_evidences</p>
-            <p>-- File lengkap: supabase/schema.sql & supabase/seed.sql</p>
-          </div>
         </div>
       )}
 
