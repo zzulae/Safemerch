@@ -96,28 +96,28 @@ export function HomePage() {
       </section>
 
       {/* 2. Simple Numbers Row */}
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-y border-slate-200 py-6 text-center">
-        <div>
-          <span className="text-xs font-medium text-slate-500 uppercase tracking-wider block">
+      <section className="grid grid-cols-3 gap-2 border-y border-slate-200 py-4 text-center">
+        <div className="px-1">
+          <span className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-wider block leading-tight">
             Rekening Terdata
           </span>
-          <p className="text-2xl font-bold text-slate-900 mt-1">
+          <p className="text-lg sm:text-2xl font-bold text-slate-900 mt-1">
             {stats.totalScammers}
           </p>
         </div>
-        <div className="border-t sm:border-t-0 sm:border-x border-slate-200 pt-4 sm:pt-0">
-          <span className="text-xs font-medium text-slate-500 uppercase tracking-wider block">
-            Total Kerugian Terverifikasi
+        <div className="border-x border-slate-200 px-1">
+          <span className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-wider block leading-tight">
+            Kerugian Terverifikasi
           </span>
-          <p className="text-2xl font-bold text-rose-600 mt-1">
+          <p className="text-sm sm:text-2xl font-bold text-rose-600 mt-1">
             {formatRupiah(stats.totalLoss)}
           </p>
         </div>
-        <div className="border-t sm:border-t-0 border-slate-200 pt-4 sm:pt-0">
-          <span className="text-xs font-medium text-slate-500 uppercase tracking-wider block">
+        <div className="px-1">
+          <span className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-wider block leading-tight">
             Laporan Valid
           </span>
-          <p className="text-2xl font-bold text-slate-900 mt-1">
+          <p className="text-lg sm:text-2xl font-bold text-slate-900 mt-1">
             {stats.approvedReports}
           </p>
         </div>
@@ -159,7 +159,7 @@ export function HomePage() {
             Memuat data...
           </div>
         ) : recentScammers.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             {recentScammers.map((scammer) => (
               <ScammerCard key={scammer.id} scammer={scammer} />
             ))}
