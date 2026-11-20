@@ -123,7 +123,24 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* 3. Recent Scammers List */}
+      {/* 3. Simple Report CTA */}
+      <section className="p-6 sm:p-8 bg-slate-100 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <h3 className="text-base font-bold text-slate-900">Pernah Menjadi Korban Penipuan?</h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Laporkan nomor rekening penipu untuk membantu melindungi pembeli lainnya.
+          </p>
+        </div>
+        <Link
+          to="/reports/create"
+          className="px-4 py-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs transition shrink-0 flex items-center gap-1.5"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Buat Laporan Baru</span>
+        </Link>
+      </section>
+
+      {/* 4. Recent Scammers List */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-slate-900">
@@ -152,23 +169,6 @@ export function HomePage() {
             Belum ada rekening penipu terdata.
           </div>
         )}
-      </section>
-
-      {/* 4. Simple Report CTA */}
-      <section className="p-6 sm:p-8 bg-slate-100 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div>
-          <h3 className="text-base font-bold text-slate-900">Pernah Menjadi Korban Penipuan?</h3>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Laporkan nomor rekening penipu untuk membantu melindungi pembeli lainnya.
-          </p>
-        </div>
-        <Link
-          to="/reports/create"
-          className="px-4 py-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs transition shrink-0 flex items-center gap-1.5"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Buat Laporan Baru</span>
-        </Link>
       </section>
     </div>
   )
