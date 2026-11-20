@@ -33,24 +33,27 @@ export function Navbar() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
-          <NavLink to="/" className={linkClass}>
-            Beranda
-          </NavLink>
-          <NavLink to="/search" className={linkClass}>
-            Cari Rekening
-          </NavLink>
-          <NavLink to="/reports/create" className={linkClass}>
-            Laporkan Penipu
-          </NavLink>
-          {user && (
-            <NavLink to="/my-reports" className={linkClass}>
-              Laporan Saya
-            </NavLink>
-          )}
-          {isAdmin && (
+          {isAdmin ? (
             <NavLink to="/admin" className={linkClass}>
               Panel Admin
             </NavLink>
+          ) : (
+            <>
+              <NavLink to="/" className={linkClass}>
+                Beranda
+              </NavLink>
+              <NavLink to="/search" className={linkClass}>
+                Cari Rekening
+              </NavLink>
+              <NavLink to="/reports/create" className={linkClass}>
+                Laporkan Penipu
+              </NavLink>
+              {user && (
+                <NavLink to="/my-reports" className={linkClass}>
+                  Laporan Saya
+                </NavLink>
+              )}
+            </>
           )}
         </nav>
 
@@ -105,44 +108,47 @@ export function Navbar() {
       {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-3">
-          <Link
-            to="/"
-            onClick={() => setIsOpen(false)}
-            className="block text-sm font-medium text-slate-700"
-          >
-            Beranda
-          </Link>
-          <Link
-            to="/search"
-            onClick={() => setIsOpen(false)}
-            className="block text-sm font-medium text-slate-700"
-          >
-            Cari Rekening
-          </Link>
-          <Link
-            to="/reports/create"
-            onClick={() => setIsOpen(false)}
-            className="block text-sm font-medium text-slate-700"
-          >
-            Laporkan Penipu
-          </Link>
-          {user && (
-            <Link
-              to="/my-reports"
-              onClick={() => setIsOpen(false)}
-              className="block text-sm font-medium text-slate-700"
-            >
-              Laporan Saya
-            </Link>
-          )}
-          {isAdmin && (
+          {isAdmin ? (
             <Link
               to="/admin"
               onClick={() => setIsOpen(false)}
-              className="block text-sm font-medium text-slate-700 font-semibold text-rose-600"
+              className="block text-sm font-semibold text-rose-600"
             >
               Panel Admin
             </Link>
+          ) : (
+            <>
+              <Link
+                to="/"
+                onClick={() => setIsOpen(false)}
+                className="block text-sm font-medium text-slate-700"
+              >
+                Beranda
+              </Link>
+              <Link
+                to="/search"
+                onClick={() => setIsOpen(false)}
+                className="block text-sm font-medium text-slate-700"
+              >
+                Cari Rekening
+              </Link>
+              <Link
+                to="/reports/create"
+                onClick={() => setIsOpen(false)}
+                className="block text-sm font-medium text-slate-700"
+              >
+                Laporkan Penipu
+              </Link>
+              {user && (
+                <Link
+                  to="/my-reports"
+                  onClick={() => setIsOpen(false)}
+                  className="block text-sm font-medium text-slate-700"
+                >
+                  Laporan Saya
+                </Link>
+              )}
+            </>
           )}
           <div className="pt-3 border-t border-slate-100">
             {user ? (
